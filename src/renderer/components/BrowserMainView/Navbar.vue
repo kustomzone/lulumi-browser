@@ -757,7 +757,7 @@
     padding: 0 5px;
     font-size: 15px;
     font-weight: 100;
-    border-bottom: 1px solid #aaa;
+    border-top: 1px solid #999;
 
     a {
       flex: 1;

@@ -131,7 +131,6 @@
   #chrome-tabs-shell {
     height: 38px;
     padding-right: 18px;
-    border-bottom: 1px solid #999;
   }
 
   .chrome-tabs {

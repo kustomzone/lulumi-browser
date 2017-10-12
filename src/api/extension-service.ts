@@ -768,5 +768,6 @@ export default class ExtensionService {
     });
 
     (this.instance.$refs.navbar as any).extensions = manifest;
+    (this.instance.$refs.panel as any).extensions = manifest;
   }
 }

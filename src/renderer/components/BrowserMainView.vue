@@ -3,6 +3,7 @@
     #nav
       tabs(ref="tabs", :windowId="windowId")
       navbar(ref="navbar", :windowId="windowId")
+      panel(ref="panel", :windowId="windowId")
     swipeArrow
     tab(v-for="(tab, index) in tabs",
         :isActive="index === currentTabIndex",
@@ -24,6 +25,7 @@
 
   import Tabs from './BrowserMainView/Tabs.vue';
   import Navbar from './BrowserMainView/Navbar.vue';
+  import Panel from './BrowserMainView/Panel.vue';
   import swipeArrow from './BrowserMainView/SwipeArrow.vue';
   import Tab from './BrowserMainView/Tab.vue';
   import Download from './BrowserMainView/Download.vue';
@@ -42,6 +44,7 @@
     components: {
       Tabs,
       Navbar,
+      Panel,
       swipeArrow,
       Tab,
       Download,
