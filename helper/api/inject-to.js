@@ -195,7 +195,7 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       ipcRenderer.send('lulumi-browser-action-set-badge-background-color',
         thisExtensionId, details);
     },
-    onClicked: (scriptType === 'event') ? new Event() : new IpcEvent('browser-action', 'on-clicked'),
+    onClicked: (scriptType === 'event' || scriptType === 'panel') ? new Event() : new IpcEvent('browser-action', 'on-clicked'),
   };
 
   lulumi.pageAction = {
@@ -220,14 +220,14 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
     hide: (tabId) => {
       ipcRenderer.send('lulumi-page-action-hide', tabId, thisExtensionId, false);
     },
-    onClicked: (scriptType === 'event') ? new Event() : new IpcEvent('page-action', 'on-clicked'),
+    onClicked: (scriptType === 'event' || scriptType === 'panel') ? new Event() : new IpcEvent('page-action', 'on-clicked'),
   };
 
-  if ((scriptType === 'event')) {
-    lulumi.commands = {
-      onCommand: new Event(),
-    };
-  }
+  lulumi.commands = {
+    onCommand: (scriptType === 'event' || scriptType === 'panel')
+      ? new Event()
+      : new IpcEvent('commands', 'on-command'),
+  };
 
   lulumi.alarms = {
     get: (name, callback) => {
@@ -334,7 +334,7 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       ipcRenderer.send('lulumi-runtime-send-message', extensionId, message, (extensionId !== thisExtensionId) /* whether it's an external message */);
     },
     beforeConnect: (extensionId, connectInfo, responseScriptType, webContentsId) => {
-      if (lulumi.runtime.port && responseScriptType && !lulumi.runtime.port.disconnected && scriptType !== 'event') {
+      if (lulumi.runtime.port && responseScriptType && !lulumi.runtime.port.disconnected && (scriptType !== 'event' && scriptType !== 'panel')) {
         lulumi.runtime.port.updateResponseScriptType(responseScriptType);
       } else {
         if (lulumi.runtime.port) {
@@ -345,7 +345,7 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       }
     },
     connect: (extensionId, connectInfo = {}) => {
-      if (scriptType !== 'event') {
+      if (scriptType !== 'event' && scriptType !== 'panel') {
         if (typeof extensionId === 'undefined') {
           // connect()
           extensionId = thisExtensionId;
@@ -358,15 +358,15 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       }
       return lulumi.runtime.port;
     },
-    onMessage: (scriptType === 'event') ? new Event() : new IpcEvent('runtime', 'on-message') ,
-    onMessageExternal: (scriptType === 'event') ? new Event() : new IpcEvent('runtime', 'on-message-external'),
-    onConnect: (scriptType === 'event') ? new Event() : 'Event scripts only',
+    onMessage: (scriptType === 'event' || scriptType === 'panel') ? new Event() : new IpcEvent('runtime', 'on-message') ,
+    onMessageExternal: (scriptType === 'event' || scriptType === 'panel') ? new Event() : new IpcEvent('runtime', 'on-message-external'),
+    onConnect: (scriptType === 'event' || scriptType === 'panel') ? new Event() : 'Event scripts only',
   };
 
   lulumi.extension = {
     getURL: lulumi.runtime.getURL,
     getBackgroundPage: () => {
-      if (scriptType === 'event') {
+      if (scriptType === 'event' || scriptType === 'panel') {
         return global;
       } else {
         // TODO: need to modify here to get the Window object of background page
@@ -770,7 +770,7 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
           };
           lulumi.tabs.get(tabId, tab => onclick(info, tab));
           
-          if (scriptType === 'event') {
+          if (scriptType === 'event' || scriptType === 'panel') {
             lulumi.tabs.get(tabId, tab => lulumi.contextMenus.onClicked.emit(info, tab));
           }
         });
@@ -891,7 +891,7 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       lulumi.contextMenus.handleMenuItems(null, null);
       ipcRenderer.send('lulumi-context-menus-remove-all', lulumi.contextMenus.menuItems[lulumi.runtime.id]);
     },
-    onClicked: (scriptType === 'event') ? new Event() : 'Event scripts only',
+    onClicked: (scriptType === 'event' || scriptType === 'panel') ? new Event() : 'Event scripts only',
   };
 
   lulumi.i18n = {

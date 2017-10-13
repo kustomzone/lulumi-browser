@@ -1,5 +1,6 @@
 const { ipcRenderer, remote } = require('electron');
 const { LocalStorage } = require('node-localstorage');
+const ResizeSensor = require('css-element-queries/src/ResizeSensor');
 
 let guestInstanceId = -1;
 const guestInstanceIndex = process.argv.findIndex(e => e.indexOf('--guest-instance-id=') !== -1);
@@ -12,18 +13,23 @@ if (guestInstanceIndex !== -1) {
 process.once('loaded', () => {
   const extensionId = global.location.hostname;
   const context = {};
-  global.scriptType = 'event';
+  global.scriptType = 'panel';
   require('../api/inject-to').injectTo(guestInstanceId, extensionId, global.scriptType, context, LocalStorage);
   global.lulumi = context.lulumi;
   global.chrome = global.lulumi;
 
   global.ipcRenderer = ipcRenderer;
+  global.ResizeSensor = ResizeSensor;
 
   ipcRenderer.once(`lulumi-extension-${extensionId}-going-removed`, (event) => {
     // remove all the registered things related to this extension
     Object.values(global.lulumi.webRequest).forEach(v => v.removeAllListeners());
     global.lulumi.contextMenus.removeAll(() => {
+      // removeBackgroundPages of src/api/lulumi-extension.ts
+      ipcRenderer.send(`lulumi-extension-${extensionId}-local-shortcut-unregister`);
+      // removeBackgroundPages of src/api/lulumi-extension.ts
       ipcRenderer.send(`lulumi-extension-${extensionId}-clean-done`);
+      // removeBackgroundPages of src/api/extensions/listeners.ts
       ipcRenderer.send(`remove-lulumi-extension-${extensionId}`);
     });
   });

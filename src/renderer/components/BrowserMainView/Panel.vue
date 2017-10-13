@@ -59,6 +59,10 @@
             new ResizeSensor(document.body, triggerResize);
           `);
         });
+        setTimeout(() => {
+          (this as any).$electron.ipcRenderer
+            .send(`${extension.extensionId}-panel-id`, webview.getWebContents().id);
+        }, 1000);
       });
       return url.format({
         protocol: 'lulumi-extension',

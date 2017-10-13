@@ -17,7 +17,7 @@ declare module 'lulumi' {
   export namespace api {
     // extension api
     export interface BackgroundPageObject {
-      html: Buffer;
+      html?: Buffer;
       name: string;
       webContentsId: number;
     }
