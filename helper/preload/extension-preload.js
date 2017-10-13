@@ -23,7 +23,11 @@ process.once('loaded', () => {
     // remove all the registered things related to this extension
     Object.values(global.lulumi.webRequest).forEach(v => v.removeAllListeners());
     global.lulumi.contextMenus.removeAll(() => {
+      // removeBackgroundPages of src/api/lulumi-extension.ts
+      ipcRenderer.send(`lulumi-extension-${extensionId}-local-shortcut-unregister`);
+      // removeBackgroundPages of src/api/lulumi-extension.ts
       ipcRenderer.send(`lulumi-extension-${extensionId}-clean-done`);
+      // removeBackgroundPages of src/api/extensions/listeners.ts
       ipcRenderer.send(`remove-lulumi-extension-${extensionId}`);
     });
   });
