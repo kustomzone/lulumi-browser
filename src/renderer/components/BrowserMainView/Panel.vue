@@ -43,10 +43,15 @@
             webview.style.height = `${size.height}px`;
             webview.style.width = `${size.width}px`;
             webview.style.overflow = 'hidden';
+          } else if (event.channel === 'ready') {
+            (this as any).$electron.ipcRenderer
+              .send(`${extension.extensionId}-panel-id`, webview.getWebContents().id);
           }
         });
         webview.addEventListener('dom-ready', () => {
           webview.executeJavaScript(`
+            ipcRenderer.sendToHost('ready');
+
             function triggerResize() {
               const height = document.body.clientHeight;
               const width = document.body.clientWidth;
@@ -59,10 +64,6 @@
             new ResizeSensor(document.body, triggerResize);
           `);
         });
-        setTimeout(() => {
-          (this as any).$electron.ipcRenderer
-            .send(`${extension.extensionId}-panel-id`, webview.getWebContents().id);
-        }, 1000);
       });
       return url.format({
         protocol: 'lulumi-extension',
