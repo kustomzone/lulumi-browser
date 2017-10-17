@@ -773,38 +773,40 @@ export default class ExtensionService {
 
   registerAction() {
     const manifest: object[] = [];
+    const panels: object[] = [];
     const remote = (this.instance as any).$electron.remote;
     const backgroundPages = remote.getGlobal('backgroundPages');
 
     this.newtabOverrides = '';
-    this.instance.$nextTick(() => {
-      Object.keys(this.manifestMap).forEach((extension) => {
-        const ext = this.manifestMap[extension];
-        if (ext !== null) {
-          Vue.set(
-            (this.instance.$refs.navbar as any).badgeTextArray,
-            ext.extensionId,
-            { text: undefined });
-          if (backgroundPages[extension]) {
-            const webContentsId = backgroundPages[extension].webContentsId;
-            ext.webContentsId = webContentsId;
-          }
-          if (ext.hasOwnProperty('chrome_url_overrides')) {
-            Object.keys(ext.chrome_url_overrides).forEach((k) => {
-              this[`${k}Overrides`] = `${url.format({
-                protocol: 'lulumi-extension',
-                slashes: true,
-                hostname: ext.extensionId,
-                pathname: ext.chrome_url_overrides[k],
-              })}`;
-            });
-          }
-          manifest.push(ext);
+    Object.keys(this.manifestMap).forEach((extension) => {
+      const ext = this.manifestMap[extension];
+      if (ext !== null) {
+        Vue.set(
+          (this.instance.$refs.navbar as any).badgeTextArray,
+          ext.extensionId,
+          { text: undefined });
+        if (backgroundPages[extension]) {
+          const webContentsId = backgroundPages[extension].webContentsId;
+          ext.webContentsId = webContentsId;
         }
-      });
+        if (ext.hasOwnProperty('chrome_url_overrides')) {
+          Object.keys(ext.chrome_url_overrides).forEach((k) => {
+            this[`${k}Overrides`] = `${url.format({
+              protocol: 'lulumi-extension',
+              slashes: true,
+              hostname: ext.extensionId,
+              pathname: ext.chrome_url_overrides[k],
+            })}`;
+          });
+        }
+        if (ext.panel) {
+          panels.push(ext);
+        }
+        manifest.push(ext);
+      }
     });
 
     (this.instance.$refs.navbar as any).extensions = manifest;
-    (this.instance.$refs.panel as any).extensions = manifest;
+    (this.instance.$refs.panel as any).extensions = panels;
   }
 }
