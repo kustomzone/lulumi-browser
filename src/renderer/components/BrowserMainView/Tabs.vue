@@ -161,6 +161,7 @@
     display: flex;
     height: 38px;
     padding-left: 10px;
+    -webkit-user-select: none;
     -webkit-app-region: drag;
   }
 
@@ -382,6 +383,7 @@
     height: 30px;
     padding-right: 10px;
     justify-content: space-between;
+    -webkit-app-region: no-drag;
 
     svg {
       width: 30px;
