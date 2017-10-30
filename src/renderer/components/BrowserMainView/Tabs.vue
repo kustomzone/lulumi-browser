@@ -132,7 +132,6 @@
     height: 38px;
     padding-right: 26px;
     padding-left: 10px;
-    border-bottom: 1px solid #999;
   }
 
   .chrome-tabs {
