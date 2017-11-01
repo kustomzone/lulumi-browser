@@ -950,11 +950,57 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
     onCreatedNavigationTarget: new IpcEvent('web-navigation', 'on-created-navigation-target'),
   };
 
+  lulumi.docker = {
+    getAllImage: (callback) => {
+      const { spawn } = require('child_process');
+      const tsaotun = spawn('tsaotun', ['image', 'list']);
+      tsaotun.stdout.on('data', (data) => {
+        callback(data.toString());
+      });
+      tsaotun.stderr.on('data', (data) => {
+        console.log(`stderr: ${data}`);
+      });
+    },
+    getContainerStatus: (all = false, callback) => {
+      const { spawn } = require('child_process');
+      const tsaotun = spawn('tsaotun', ['ps', (all) ? '-a' : '']);
+      tsaotun.stdout.on('data', (data) => {
+        callback(data.toString());
+      });
+      tsaotun.stderr.on('data', (data) => {
+        console.log(`stderr: ${data}`);
+      });
+    },
+    runContainer: (image, tag = 'latest', callback) => {
+      const { spawn } = require('child_process');
+      const tsaotun = spawn('tsaotun', ['run', '-id', `${image}:${tag}`]);
+      tsaotun.stdout.on('data', (data) => {
+        callback(data.toString());
+      });
+      tsaotun.stderr.on('data', (data) => {
+        console.log(`stderr: ${data}`);
+      });
+    },
+    execContainer: (cid, command, callback) => {
+      const stripAnsi = require('strip-ansi');
+      const { spawn } = require('child_process');
+      const tsaotun = spawn('tsaotun', ['exec', cid, command]);
+      tsaotun.stdout.on('data', (data) => {
+        callback(stripAnsi(data.toString()));
+      });
+      tsaotun.stderr.on('data', (data) => {
+        console.log(`stderr: ${data}`);
+      });
+    },
+  };
+
   // wrapper
-  const blackList = ['beforeConnect', 'handleMenuItems', 'contextMenusIPC'];
+  const whileList = ['beforeConnect', 'handleMenuItems', 'contextMenusIPC'];
+  const experimentalApiList = ['getAllImage', 'getContainerStatus', 'runContainer', 'execContainer'];
+  const privilegedList = collect(whileList).concat(experimentalApiList);
   Object.keys(lulumi).forEach((key) => {
     Object.keys(lulumi[key]).forEach((member) => {
-      if (typeof lulumi[key][member] === 'function' && !blackList.includes(member)) {
+      if (typeof lulumi[key][member] === 'function' && !privilegedList.contains(member)) {
         try {
           const cached = lulumi[key][member];
           lulumi[key][member] = (function () {
