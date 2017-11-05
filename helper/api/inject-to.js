@@ -960,8 +960,15 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       tsaotun.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
       });
+      tsaotun.on('error', (err) => {
+        console.log(`${err}. Forget to install tsaotun?`);
+      });
     },
     getContainerStatus: (all = false, callback) => {
+      if (typeof all === 'function') {
+        lulumi.docker.getContainerStatus(undefined, all);
+        return;
+      }
       const { spawn } = require('child_process');
       const tsaotun = spawn('tsaotun', ['ps', (all) ? '-a' : '']);
       tsaotun.stdout.on('data', (data) => {
@@ -970,8 +977,15 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       tsaotun.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
       });
+      tsaotun.on('error', (err) => {
+        console.log(`${err}. Forget to install tsaotun?`);
+      });
     },
     runContainer: (image, tag = 'latest', callback) => {
+      if (typeof tag === 'function') {
+        lulumi.docker.runContainer(image, undefined, tag);
+        return;
+      }
       const { spawn } = require('child_process');
       const tsaotun = spawn('tsaotun', ['run', '-id', `${image}:${tag}`]);
       tsaotun.stdout.on('data', (data) => {
@@ -979,6 +993,9 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       });
       tsaotun.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
+      });
+      tsaotun.on('error', (err) => {
+        console.log(`${err}. Forget to install tsaotun?`);
       });
     },
     execContainer: (cid, command, callback) => {
@@ -990,6 +1007,9 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       });
       tsaotun.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
+      });
+      tsaotun.on('error', (err) => {
+        console.log(`${err}. Forget to install tsaotun?`);
       });
     },
   };
