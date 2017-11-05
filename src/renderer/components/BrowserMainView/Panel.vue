@@ -1,8 +1,9 @@
 <template lang="pug">
-  #browser-panel
+  #browser-panel(@contextmenu.prevent="$parent.onNavbarContextMenu")
     div(v-for="extension in extensions",
         :key="extension.extensionId")
-      webview.extension(:src="buildPanelPath(extension)",
+      webview.extension(v-show="extension.show",
+                        :src="buildPanelPath(extension)",
                         :ref="`webview-${extension.extensionId}`")
 </template>
 
@@ -24,19 +25,6 @@
     buildPanelPath(extension) {
       this.$nextTick(() => {
         const webview = this.$refs[`webview-${extension.extensionId}`][0];
-        webview.addEventListener('context-menu', (event) => {
-          const { Menu, MenuItem } = (this as any).$electron.remote;
-          const menu = new Menu();
-
-          menu.append(new MenuItem({
-            label: 'Inspect Element',
-            click: () => {
-              webview.inspectElement(event.params.x, event.params.y);
-            },
-          }));
-
-          menu.popup((this as any).$electron.remote.getCurrentWindow(), { async: true });
-        });
         webview.addEventListener('ipc-message', (event: Electron.IpcMessageEvent) => {
           if (event.channel === 'resize') {
             const size = event.args[0];
@@ -71,11 +59,6 @@
         hostname: extension.extensionId,
         pathname: extension.panel,
       });
-    }
-
-    mounted() {
-      // tslint:disable-next-line
-      console.log(this.extensions);
     }
   };
 </script>

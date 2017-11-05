@@ -1,55 +1,57 @@
 <template lang="pug">
-  #browser-navbar
-    .control-group
-      a(@click="$parent.onClickHome", class="enabled")
-        iview-icon(type="ios-home", size="16")
-      a(id="browser-navbar__goBack", @click="$parent.onClickBack", @contextmenu="$parent.onClickBackContextMenu()", @mousedown="onGoBackMouseDown", @mouseup="onGoBackMouseUp", :class="tab.canGoBack ? 'enabled' : 'disabled'")
-        iview-icon(type="arrow-left-c", size="16")
-      a(id="browser-navbar__goForward", @click="$parent.onClickForward", @contextmenu="$parent.onClickForwardContextMenu()", @mousedown="onGoForwardMouseDown", @mouseup="onGoForwardMouseUp", :class="tab.canGoForward ? 'enabled' : 'disabled'")
-        iview-icon(type="arrow-right-c", size="16")
-      a(v-if="tab.isLoading", id="browser-navbar__stop", @click="$parent.onClickStop", class="enabled")
-        iview-icon(type="close", size="16")
-      a(v-else, @click="$parent.onClickRefresh", id="browser-navbar__refresh", :class="tab.canRefresh ? 'enabled' : 'disabled'")
-        iview-icon(type="android-refresh", size="16")
-    .input-group(@contextmenu="$parent.onNavContextMenu")
-      good-custom-autocomplete#url-input(
-        ref="input",
-        @keyup.shift.up.native="selectPortion",
-        @keyup.shift.down.native="selectPortion",
-        @input="onChange",
-        @select="onSelect",
-        :trigger-on-focus="false",
-        :placeholder="$t('navbar.placeholder')",
-        :fetch-suggestions="querySearch",
-        v-focus="focused",
-        :value="value",
-        popper-class="my-autocomplete",
-        custom-item="url-suggestion")
-        el-button(slot="prepend")
-          div.secure(v-if="secure")
-            awesome-icon(name="lock")
-            span {{ $t('navbar.indicator.secure') }}
-          div.insecure(v-else)
-            awesome-icon(name="unlock")
-            span {{ $t('navbar.indicator.insecure') }}
-    .extensions-group(v-sortable="")
-      div.block(v-for="extension in extensions",
-          :key="extension.extensionId")
-        el-popover(:ref="`popover-${extension.extensionId}`", placement="bottom", trigger="click", :disabled="showPopupOrNot(extension)")
-          el-badge.badge(:ref="`badge-${extension.extensionId}`",
-                         :value="showBrowserActionBadgeText(extension.extensionId)",
-                         :background="showBrowserActionBadgeBackgroundColor(extension.extensionId)"
-                         slot="reference")
-            img.extension(v-if="(extension !== undefined) && (loadIcon(extension) !== undefined)",
-                          :src="loadIcon(extension)",
-                          :class="showOrNot(extension)",
-                          :title="showTitle(extension)",
-                          @click.prevent="sendIPC($event, extension)",
-                          @contextmenu.prevent="onContextmenu(extension)")
-          webview.extension(:ref="`webview-${extension.extensionId}`")
-    .common-group
-      a(id="browser-navbar__common", @click="$parent.onCommonMenu", class="enabled")
-        iview-icon(type="android-more-vertical", size="22")
+  div
+    #browser-navbar(@contextmenu.prevent="onNavbarContextMenu")
+      .control-group
+        a(@click="$parent.onClickHome", class="enabled")
+          iview-icon(type="ios-home", size="16")
+        a(id="browser-navbar__goBack", @click="$parent.onClickBack", @contextmenu="$parent.onClickBackContextMenu()", @mousedown="onGoBackMouseDown", @mouseup="onGoBackMouseUp", :class="tab.canGoBack ? 'enabled' : 'disabled'")
+          iview-icon(type="arrow-left-c", size="16")
+        a(id="browser-navbar__goForward", @click="$parent.onClickForward", @contextmenu="$parent.onClickForwardContextMenu()", @mousedown="onGoForwardMouseDown", @mouseup="onGoForwardMouseUp", :class="tab.canGoForward ? 'enabled' : 'disabled'")
+          iview-icon(type="arrow-right-c", size="16")
+        a(v-if="tab.isLoading", id="browser-navbar__stop", @click="$parent.onClickStop", class="enabled")
+          iview-icon(type="close", size="16")
+        a(v-else, @click="$parent.onClickRefresh", id="browser-navbar__refresh", :class="tab.canRefresh ? 'enabled' : 'disabled'")
+          iview-icon(type="android-refresh", size="16")
+      .input-group
+        good-custom-autocomplete#url-input(
+          ref="input",
+          @keyup.shift.up.native="selectPortion",
+          @keyup.shift.down.native="selectPortion",
+          @input="onChange",
+          @select="onSelect",
+          :trigger-on-focus="false",
+          :placeholder="$t('navbar.placeholder')",
+          :fetch-suggestions="querySearch",
+          v-focus="focused",
+          :value="value",
+          popper-class="my-autocomplete",
+          custom-item="url-suggestion")
+          el-button(slot="prepend")
+            div.secure(v-if="secure")
+              awesome-icon(name="lock")
+              span {{ $t('navbar.indicator.secure') }}
+            div.insecure(v-else)
+              awesome-icon(name="unlock")
+              span {{ $t('navbar.indicator.insecure') }}
+      .extensions-group(v-sortable="")
+        div.block(v-for="extension in extensions",
+            :key="extension.extensionId")
+          el-popover(:ref="`popover-${extension.extensionId}`", placement="bottom", trigger="click", :disabled="showPopupOrNot(extension)")
+            el-badge.badge(:ref="`badge-${extension.extensionId}`",
+                          :value="showBrowserActionBadgeText(extension.extensionId)",
+                          :background="showBrowserActionBadgeBackgroundColor(extension.extensionId)"
+                          slot="reference")
+              img.extension(v-if="(extension !== undefined) && (loadIcon(extension) !== undefined)",
+                            :src="loadIcon(extension)",
+                            :class="showOrNot(extension)",
+                            :title="showTitle(extension)",
+                            @click.prevent="sendIPC($event, extension)",
+                            @contextmenu.prevent="onContextmenu(extension)")
+            webview.extension(:ref="`webview-${extension.extensionId}`")
+      .common-group
+        a(id="browser-navbar__common", @click="$parent.onCommonMenu", class="enabled")
+          iview-icon(type="android-more-vertical", size="22")
+    panel(ref="panel", :windowId="windowId")
 </template>
 
 <script lang="ts">
@@ -84,6 +86,7 @@
   import recommendTopSite from '../../js/data/RecommendTopSite';
 
   import BrowserMainView from '../BrowserMainView.vue';
+  import Panel from './Panel.vue';
 
   import { navbar, renderer, store } from 'lulumi';
 
@@ -179,6 +182,7 @@
       'windowId',
     ],
     components: {
+      Panel,
       'awesome-icon': AwesomeIcon,
       'el-badge': Badge,
       'el-button': Button,
@@ -195,6 +199,7 @@
     value: string = '';
     suggestionItems: renderer.SuggestionItem[] = recommendTopSite;
     extensions: any[] = [];
+    panelExtensions: any[] = [];
     onbrowserActionClickedEvent: Event = new Event();
     onpageActionClickedEvent: Event = new Event();
     badgeTextArray: navbar.BadgeTextArray = {};
@@ -261,6 +266,10 @@
       return fuse;
     }
 
+    @Watch('panelExtensions')
+    onPanelExtensions(newPanelExtensions: any[]): void {
+      (this.$refs.panel as Panel).extensions = newPanelExtensions;
+    }
     @Watch('url')
     onUrl(newUrl: string): void {
       this.showUrl(this.url, this.tab.id);
@@ -294,6 +303,21 @@
       (this.$refs.input as any).suggestions.length = 0;
     }
 
+    onNavbarContextMenu() {
+      const { Menu, MenuItem } = (this as any).$electron.remote;
+      const menu = new Menu();
+
+      this.panelExtensions.forEach((panelExtension) => {
+        menu.append(new MenuItem({
+          label: panelExtension.name,
+          type: 'checkbox',
+          checked: panelExtension.show,
+          click: () => (panelExtension.show = !panelExtension.show),
+        }));
+      });
+
+      menu.popup((this as any).$electron.remote.getCurrentWindow(), { async: true });
+    }
     updateSecure(url: string): void {
       if (urlUtil.getScheme(url) === 'lulumi://') {
         this.secure = true;
@@ -668,6 +692,7 @@
         // .el-input-group__prepend event(s)
         const prepend = document.getElementsByClassName('el-input-group__prepend')[0];
         prepend.addEventListener('click', this.showCertificate);
+        prepend.addEventListener('contextmenu', this.onNavbarContextMenu);
 
         // .el-input__inner event(s)
         const originalInput = document.getElementsByClassName('el-input__inner')[0];
@@ -681,6 +706,7 @@
         originalInput.addEventListener('click', () => {
           this.focused = true;
         });
+        originalInput.addEventListener('contextmenu', (this.$parent as BrowserMainView).onNavContextMenu);
         originalInput.addEventListener('blur', () => {
           setTimeout(() => {
             this.focused = false;

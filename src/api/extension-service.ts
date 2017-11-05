@@ -800,6 +800,7 @@ export default class ExtensionService {
           });
         }
         if (ext.panel) {
+          ext.show = true;
           panels.push(ext);
         }
         manifest.push(ext);
@@ -807,6 +808,6 @@ export default class ExtensionService {
     });
 
     (this.instance.$refs.navbar as any).extensions = manifest;
-    (this.instance.$refs.panel as any).extensions = panels;
+    (this.instance.$refs.navbar as any).panelExtensions = panels;
   }
 }
