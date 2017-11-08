@@ -13,19 +13,18 @@
         a(v-else, @click="$parent.onClickRefresh", id="browser-navbar__refresh", :class="tab.canRefresh ? 'enabled' : 'disabled'")
           iview-icon(type="android-refresh", size="16")
       .input-group
-        good-custom-autocomplete#url-input(
-          ref="input",
-          @keyup.shift.up.native="selectPortion",
-          @keyup.shift.down.native="selectPortion",
-          @input="onChange",
-          @select="onSelect",
-          :trigger-on-focus="false",
-          :placeholder="$t('navbar.placeholder')",
-          :fetch-suggestions="querySearch",
-          v-focus="focused",
-          :value="value",
-          popper-class="my-autocomplete",
-          custom-item="url-suggestion")
+        good-custom-autocomplete#url-input(ref="input",
+                                           @keyup.shift.up.native="selectPortion",
+                                           @keyup.shift.down.native="selectPortion",
+                                           @input="onChange",
+                                           @select="onSelect",
+                                           :trigger-on-focus="false",
+                                           :placeholder="$t('navbar.placeholder')",
+                                           :fetch-suggestions="querySearch",
+                                           v-focus="focused",
+                                           :value="value",
+                                           popper-class="my-autocomplete",
+                                           custom-item="url-suggestion")
           el-button(slot="prepend")
             div.secure(v-if="secure")
               awesome-icon(name="lock")
@@ -36,11 +35,17 @@
       .extensions-group(v-sortable="")
         div.block(v-for="extension in extensions",
             :key="extension.extensionId")
-          el-popover(:ref="`popover-${extension.extensionId}`", placement="bottom", trigger="click", :disabled="showPopupOrNot(extension)")
+          el-popover(:ref="`popover-${extension.extensionId}`",
+                     placement="bottom",
+                     trigger="click",
+                     :disabled="showPopupOrNot(extension)",
+                     :popper-options={
+                       gpuAcceleration: true,
+                     })
             el-badge.badge(:ref="`badge-${extension.extensionId}`",
-                          :value="showBrowserActionBadgeText(extension.extensionId)",
-                          :background="showBrowserActionBadgeBackgroundColor(extension.extensionId)"
-                          slot="reference")
+                           :value="showBrowserActionBadgeText(extension.extensionId)",
+                           :background="showBrowserActionBadgeBackgroundColor(extension.extensionId)",
+                           slot="reference")
               img.extension(v-if="(extension !== undefined) && (loadIcon(extension) !== undefined)",
                             :src="loadIcon(extension)",
                             :class="showOrNot(extension)",
