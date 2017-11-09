@@ -165,7 +165,7 @@ export default class ExtensionService {
       if (vue.$electron.remote.webContents.fromId(data.webContentsId)) {
         const onClickedEvent = require('lulumi').pageAction.onClicked(data.webContentsId);
         if (onClickedEvent) {
-          onClickedEvent.emit(data.args);
+          onClickedEvent.emit(data.args, data.sender);
         }
       }
     });

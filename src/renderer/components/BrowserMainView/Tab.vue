@@ -236,7 +236,6 @@
         // fired once
         webview.style.height
           = `calc(100vh - ${nav.clientHeight}px)`;
-        
         this.navigateTo(this.tab.url);
       }
     }
