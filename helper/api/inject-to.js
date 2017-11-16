@@ -956,9 +956,11 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
     getAllImage: (callback) => {
       const { spawn } = require('child_process');
       const tsaotun = spawn('tsaotun', ['image', 'list']);
-      tsaotun.stdout.on('data', (data) => {
-        callback(data.toString());
-      });
+      if (callback) {
+        tsaotun.stdout.on('data', (data) => {
+          callback(data.toString());
+        });
+      }
       tsaotun.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
       });
@@ -973,9 +975,11 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       }
       const { spawn } = require('child_process');
       const tsaotun = spawn('tsaotun', ['ps', (all) ? '-a' : '']);
-      tsaotun.stdout.on('data', (data) => {
-        callback(data.toString());
-      });
+      if (callback) {
+        tsaotun.stdout.on('data', (data) => {
+          callback(data.toString());
+        });
+      }
       tsaotun.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
       });
@@ -983,16 +987,39 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
         console.log(`${err}. Forget to install tsaotun?`);
       });
     },
-    runContainer: (image, tag = 'latest', callback) => {
+    runContainer: (image, tag = 'latest', runProperties, command, callback) => {
       if (typeof tag === 'function') {
-        lulumi.docker.runContainer(image, undefined, tag);
+        lulumi.docker.runContainer(image, undefined, undefined, undefined, tag);
+        return;
+      }
+      if (typeof command === 'function') {
+        lulumi.docker.runContainer(image, tag, runProperties, undefined, command);
+        return;
+      }
+      if (typeof runProperties === 'function') {
+        lulumi.docker.runContainer(image, tag, undefined, undefined, runProperties);
         return;
       }
       const { spawn } = require('child_process');
-      const tsaotun = spawn('tsaotun', ['run', '-id', `${image}:${tag}`]);
-      tsaotun.stdout.on('data', (data) => {
-        callback(data.toString());
-      });
+      let tsaotun;
+      if (runProperties.port) {
+        if (runProperties.volume) {
+          tsaotun = spawn('tsaotun', ['run', '-id', '-p', runProperties.port, '-v', runProperties.volume, '-e', 'ACCEPT_EULA=Y', '-e', 'SA_PASSWORD=yourStrong(!)Password', `${image}:${tag}`, command]);
+        } else {
+          tsaotun = spawn('tsaotun', ['run', '-id', '-p', runProperties.port, `${image}:${tag}`, command]);
+        }
+      } else {
+        if (runProperties.volume) {
+          tsaotun = spawn('tsaotun', ['run', '-id', '-v', runProperties.volume, `${image}:${tag}`, command]);
+        } else {
+          tsaotun = spawn('tsaotun', ['run', '-id', `${image}:${tag}`, command]);
+        }
+      }
+      if (callback) {
+        tsaotun.stdout.on('data', (data) => {
+          callback(data.toString());
+        });
+      }
       tsaotun.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
       });
@@ -1004,9 +1031,11 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
       const stripAnsi = require('strip-ansi');
       const { spawn } = require('child_process');
       const tsaotun = spawn('tsaotun', ['exec', cid, command]);
-      tsaotun.stdout.on('data', (data) => {
-        callback(stripAnsi(data.toString()));
-      });
+      if (callback) {
+        tsaotun.stdout.on('data', (data) => {
+          callback(stripAnsi(data.toString()));
+        });
+      }
       tsaotun.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
       });
@@ -1016,9 +1045,44 @@ exports.injectTo = (guestInstanceId, thisExtensionId, scriptType, context, Local
     },
   };
 
+  lulumi.shell = {
+    open: (openProperties) => {
+      lulumi.docker.getContainerStatus((data) => {
+        if (data.indexOf('xterm') === -1) {
+          if (openProperties) {
+            if (openProperties.port && openProperties.volume) {
+              lulumi.docker.runContainer('xterm-server', 'latest', {
+                port: openProperties.port,
+                volume: openProperties.volume,
+              }, () => {
+                console.log('xterm is started!');
+              });
+            } else if (openProperties.port) {
+              lulumi.docker.runContainer('xterm-server', 'latest', {
+                port: openProperties.port,
+              }, () => {
+                console.log('xterm is started!');
+              });
+            } else if (openProperties.volume) {
+              lulumi.docker.runContainer('xterm-server', 'latest', {
+                volume: openProperties.volume,
+              }, () => {
+                console.log('xterm is started!');
+              });
+            }
+          }
+        }
+        lulumi.tabs.create({ url: `http://localhost:${openProperties.port.split(':', 1)[0]}`, active: true });
+      });
+    },
+  };
+
   // wrapper
   const whileList = ['beforeConnect', 'handleMenuItems', 'contextMenusIPC'];
-  const experimentalApiList = ['getAllImage', 'getContainerStatus', 'runContainer', 'execContainer'];
+  const experimentalApiList = [
+    'getAllImage', 'getContainerStatus', 'runContainer', 'execContainer', // docker
+    'open', // shell
+  ];
   const privilegedList = collect(whileList).concat(experimentalApiList);
   Object.keys(lulumi).forEach((key) => {
     Object.keys(lulumi[key]).forEach((member) => {
