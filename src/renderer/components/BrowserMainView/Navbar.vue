@@ -326,16 +326,17 @@
       const { Menu, MenuItem } = (this as any).$electron.remote;
       const menu = new Menu();
 
-      this.panelExtensions.forEach((panelExtension) => {
-        menu.append(new MenuItem({
-          label: panelExtension.name,
-          type: 'checkbox',
-          checked: panelExtension.show,
-          click: () => (panelExtension.show = !panelExtension.show),
-        }));
-      });
-
-      menu.popup(currentWindow, { async: true });
+      if (this.panelExtensions.length !== 0) {
+        this.panelExtensions.forEach((panelExtension) => {
+          menu.append(new MenuItem({
+            label: panelExtension.name,
+            type: 'checkbox',
+            checked: panelExtension.show,
+            click: () => (panelExtension.show = !panelExtension.show),
+          }));
+        });
+        menu.popup(currentWindow, { async: true });
+      }
     }
     updateSecure(url: string): void {
       if (urlUtil.getScheme(url) === 'lulumi://') {
