@@ -10,7 +10,7 @@
 <script lang="ts">
   import { Component, Vue } from 'vue-property-decorator';
 
-  import url from 'url';
+  import * as url from 'url';
 
   @Component({
     props: [

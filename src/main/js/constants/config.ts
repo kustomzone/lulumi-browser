@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 
 const lulumiRootPath = process.env.NODE_ENV === 'development'
   ? path.resolve(__dirname, '../../../../')
@@ -15,5 +15,5 @@ export default {
   lulumiPreloadPath: `${lulumiHelperPath}/preload`,
   lulumiPagesPath: `${lulumiHelperPath}/pages`,
   lulumiPDFJSPath: `${lulumiHelperPath}/pdfjs`,
-  lulumiRev: '9dbec6b3f22b503cb72f6b189a75f4e47ae863de',
+  lulumiRev: '7e91423db5e48eb68e62b5f2d6158074a2c7d028',
 };
