@@ -94,13 +94,11 @@
   import BrowserMainView from '../BrowserMainView.vue';
   import Panel from './Panel.vue';
 
-  import { navbar, renderer, store } from 'lulumi';
-
   Vue.component('suggestion-item', {
     functional: true,
     render(h, ctx) {
-      const suggestion: renderer.SuggestionObject = ctx.props.item;
-      const item: renderer.SuggestionItem = suggestion.item;
+      const suggestion: Lulumi.Renderer.SuggestionObject = ctx.props.item;
+      const item: Lulumi.Renderer.SuggestionItem = suggestion.item;
       if (item.title) {
         if (suggestion.matches) {
           let renderElementsOfTitle: any[] = [];
@@ -197,26 +195,26 @@
     secure: boolean = false;
     focused: boolean = false;
     value: string = '';
-    suggestionItems: renderer.SuggestionItem[] = recommendTopSite;
+    suggestionItems: Lulumi.Renderer.SuggestionItem[] = recommendTopSite;
     extensions: any[] = [];
     panelExtensions: any[] = [];
     onbrowserActionClickedEvent: Event = new Event();
     onpageActionClickedEvent: Event = new Event();
-    badgeTextArray: navbar.BadgeTextArray = {};
-    badgeBackgroundColorArray: navbar.BadgeBackgroundColorArray = {};
+    badgeTextArray: Lulumi.Navbar.BadgeTextArray = {};
+    badgeBackgroundColorArray: Lulumi.Navbar.BadgeBackgroundColorArray = {};
     
     windowId: number;
 
-    get dummyTabObject(): store.TabObject {
+    get dummyTabObject(): Lulumi.Store.TabObject {
       return this.$store.getters.tabConfig.dummyTabObject;
     }
     get currentTabIndex(): number | undefined {
       return this.$store.getters.currentTabIndexes[this.windowId];
     }
-    get tabs(): Array<store.TabObject> {
+    get tabs(): Array<Lulumi.Store.TabObject> {
       return this.$store.getters.tabs.filter(tab => tab.windowId === this.windowId);
     }
-    get tab(): store.TabObject {
+    get tab(): Lulumi.Store.TabObject {
       if (this.tabs.length === 0 || this.currentTabIndex === undefined) {
         return this.dummyTabObject;
       }
@@ -231,7 +229,7 @@
       }
       return this.tabs[this.currentTabIndex].pageActionMapping;
     }
-    get certificates(): store.Certificates {
+    get certificates(): Lulumi.Store.Certificates {
       return this.$store.getters.certificates;
     }
     get url(): string {
@@ -240,11 +238,11 @@
       }
       return this.tabs[this.currentTabIndex].url;
     }
-    get currentSearchEngine(): store.SearchEngineObject {
+    get currentSearchEngine(): Lulumi.Store.SearchEngineObject {
       return this.$store.getters.currentSearchEngine;
     }
     get fuse(): Fuse {
-      const suggestionItems: renderer.SuggestionItem[] = [];
+      const suggestionItems: Lulumi.Renderer.SuggestionItem[] = [];
       this.$store.getters.history.forEach((history) => {
         const part: string = history.url.replace(/(^\w+:|^)\/\//, '');
         suggestionItems.push({
@@ -316,21 +314,23 @@
     }
 
     onNavbarContextMenu() {
-      const currentWindow: Electron.BrowserWindow
-        = (this as any).$electron.remote.BrowserWindow.fromId(this.windowId);
-      const { Menu, MenuItem } = (this as any).$electron.remote;
-      const menu = new Menu();
+      const currentWindow: Electron.BrowserWindow | null
+        = this.$electron.remote.BrowserWindow.fromId(this.windowId);
+      if (currentWindow) {
+        const { Menu, MenuItem } = this.$electron.remote;
+        const menu = new Menu();
 
-      if (this.panelExtensions.length !== 0) {
-        this.panelExtensions.forEach((panelExtension) => {
-          menu.append(new MenuItem({
-            label: panelExtension.name,
-            type: 'checkbox',
-            checked: panelExtension.show,
-            click: () => (panelExtension.show = !panelExtension.show),
-          }));
-        });
-        menu.popup(currentWindow, { async: true });
+        if (this.panelExtensions.length !== 0) {
+          this.panelExtensions.forEach((panelExtension) => {
+            menu.append(new MenuItem({
+              label: panelExtension.name,
+              type: 'checkbox',
+              checked: panelExtension.show,
+              click: () => (panelExtension.show = !panelExtension.show),
+            }));
+          });
+          menu.popup(currentWindow, { async: true });
+        }
       }
     }
     updateSecure(url: string): void {
@@ -356,7 +356,7 @@
       this.secure = false;
     }
     showCertificate(): void {
-      const ipc: Electron.IpcRenderer = (this as any).$electron.ipcRenderer;
+      const ipc = this.$electron.ipcRenderer;
       const hostname = urlUtil.getHostname(this.url);
       if (hostname) {
         const certificateObject = this.certificates[hostname];
@@ -376,8 +376,8 @@
         el.selectionEnd = el.value.length;
       }
     }
-    unique(suggestions: renderer.SuggestionObject[]): renderer.SuggestionObject[] {
-      const newSuggestions: renderer.SuggestionObject[] = [];
+    unique(suggestions: Lulumi.Renderer.SuggestionObject[]): Lulumi.Renderer.SuggestionObject[] {
+      const newSuggestions: Lulumi.Renderer.SuggestionObject[] = [];
       const seen: Set<string> = new Set();
 
       suggestions.forEach((suggestion) => {
@@ -424,8 +424,8 @@
     onChange(val: string): void {
       this.value = val;
     }
-    onSelect(event: renderer.SuggestionObject): void {
-      const item: renderer.SuggestionItem = event.item;
+    onSelect(event: Lulumi.Renderer.SuggestionObject): void {
+      const item: Lulumi.Renderer.SuggestionItem = event.item;
       this.focused = false;
       if (item.title === `${this.currentSearchEngine.name} ${this.$t('navbar.search')}`) {
         (this.$parent as BrowserMainView).onEnterUrl(
@@ -435,10 +435,10 @@
       }
     }
     querySearch(queryString: string, cb: Function): void {
-      const ipc: Electron.IpcRenderer = (this as any).$electron.ipcRenderer;
+      const ipc = this.$electron.ipcRenderer;
       const currentSearchEngine: string = this.currentSearchEngine.name;
       const navbarSearch = this.$t('navbar.search');
-      let suggestions: renderer.SuggestionObject[] = [];
+      let suggestions: Lulumi.Renderer.SuggestionObject[] = [];
       this.suggestionItems.forEach(item => suggestions.push({ item }));
       if (queryString) {
         suggestions = suggestions.filter(this.createFilter(queryString));
@@ -578,16 +578,16 @@
         }
         if (icons) {
           if (typeof icons === 'string') {
-            return (this as any).$electron.remote.nativeImage
-              .createFromPath(path.join(extension.srcDirectory, icons)).toDataURL('image/png');
+            return this.$electron.remote.nativeImage
+              .createFromPath(path.join(extension.srcDirectory, icons)).toDataURL();
           }
-          return (this as any).$electron.remote.nativeImage
-            .createFromPath(path.join(extension.srcDirectory, Object.values(icons)[0])).toDataURL('image/png');
+          return this.$electron.remote.nativeImage
+            .createFromPath(path.join(extension.srcDirectory, Object.values(icons)[0])).toDataURL();
         }
         return undefined;
       } catch (event) {
-        return (this as any).$electron.remote.nativeImage
-          .createFromPath(path.join(extension.srcDirectory, extension.icons['16'])).toDataURL('image/png');
+        return this.$electron.remote.nativeImage
+          .createFromPath(path.join(extension.srcDirectory, extension.icons['16'])).toDataURL();
       }
     }
     showOrNot(extension: any): string {
@@ -633,102 +633,106 @@
       return '';
     }
     sendIPC(event: Electron.Event, extension: any): void {
-      const currentWindow: Electron.BrowserWindow
-        = (this as any).$electron.remote.BrowserWindow.fromId(this.windowId);
-      const isPageAction = extension.page_action;
-      const isBrowserAction = extension.browser_action;
-      if (isPageAction || isBrowserAction) {
-        const webview = this.$refs[`webview-${extension.extensionId}`][0];
-        webview.addEventListener('context-menu', (event) => {
-          const { Menu, MenuItem } = (this as any).$electron.remote;
-          const menu = new Menu();
+      const currentWindow: Electron.BrowserWindow | null
+        = this.$electron.remote.BrowserWindow.fromId(this.windowId);
+      if (currentWindow) {
+        const isPageAction = extension.page_action;
+        const isBrowserAction = extension.browser_action;
+        if (isPageAction || isBrowserAction) {
+          const webview = this.$refs[`webview-${extension.extensionId}`][0];
+          webview.addEventListener('context-menu', (event) => {
+            const { Menu, MenuItem } = this.$electron.remote;
+            const menu = new Menu();
 
-          menu.append(new MenuItem({
-            label: 'Inspect Element',
-            click: () => {
-              webview.inspectElement(event.params.x, event.params.y);
-            },
-          }));
+            menu.append(new MenuItem({
+              label: 'Inspect Element',
+              click: () => {
+                webview.inspectElement(event.params.x, event.params.y);
+              },
+            }));
 
-          menu.popup(currentWindow, { async: true });
-        });
-        webview.addEventListener('ipc-message', (event: Electron.IpcMessageEvent) => {
-          if (event.channel === 'resize') {
-            const size = event.args[0];
-            webview.style.height = `${size.height}px`;
-            webview.style.width = `${size.width}px`;
-            webview.style.overflow = 'hidden';
-          }
-        });
-        webview.addEventListener('dom-ready', () => {
-          webview.executeJavaScript(`
-            function triggerResize() {
-              const height = document.body.clientHeight;
-              const width = document.body.clientWidth;
-              ipcRenderer.sendToHost('resize', {
-                height,
-                width,
-              });
+            menu.popup(currentWindow, { async: true });
+          });
+          webview.addEventListener('ipc-message', (event: Electron.IpcMessageEvent) => {
+            if (event.channel === 'resize') {
+              const size = event.args[0];
+              webview.style.height = `${size.height}px`;
+              webview.style.width = `${size.width}px`;
+              webview.style.overflow = 'hidden';
             }
-            triggerResize();
-            new ResizeSensor(document.body, triggerResize);
-          `);
-        });
-        if (isPageAction) {
-          const target: HTMLElement = (event.target as HTMLElement);
-          const img: HTMLImageElement = target.tagName === 'SUP'
-            ? (target.previousElementSibling! as HTMLImageElement)
-            : (target as HTMLImageElement);
-          if (img.classList.contains('enabled')) {
-            if (extension.page_action.default_popup) {
+          });
+          webview.addEventListener('dom-ready', () => {
+            webview.executeJavaScript(`
+              function triggerResize() {
+                const height = document.body.clientHeight;
+                const width = document.body.clientWidth;
+                ipcRenderer.sendToHost('resize', {
+                  height,
+                  width,
+                });
+              }
+              triggerResize();
+              new ResizeSensor(document.body, triggerResize);
+            `);
+          });
+          if (isPageAction) {
+            const target: HTMLElement = (event.target as HTMLElement);
+            const img: HTMLImageElement = target.tagName === 'SUP'
+              ? (target.previousElementSibling! as HTMLImageElement)
+              : (target as HTMLImageElement);
+            if (img.classList.contains('enabled')) {
+              if (extension.page_action.default_popup) {
+                webview.setAttribute('src', `${url.format({
+                  protocol: 'lulumi-extension',
+                  slashes: true,
+                  hostname: extension.extensionId,
+                  pathname: extension.page_action.default_popup,
+                })}`);
+                return;
+              }
+              if (extension.webContentsId) {
+                this.$electron.remote.webContents.fromId(extension.webContentsId)
+                  .send('lulumi-page-action-clicked', { id: this.tab.id });
+              }
+            }
+          } else if (isBrowserAction) {
+            if (extension.browser_action.default_popup) {
               webview.setAttribute('src', `${url.format({
                 protocol: 'lulumi-extension',
                 slashes: true,
                 hostname: extension.extensionId,
-                pathname: extension.page_action.default_popup,
+                pathname: extension.browser_action.default_popup,
               })}`);
               return;
             }
             if (extension.webContentsId) {
-              (this as any).$electron.remote.webContents.fromId(extension.webContentsId)
-                .send('lulumi-page-action-clicked', { id: this.tab.id });
+              this.$electron.remote.webContents.fromId(extension.webContentsId)
+                .send('lulumi-browser-action-clicked', { id: this.tab.id });
             }
-          }
-        } else if (isBrowserAction) {
-          if (extension.browser_action.default_popup) {
-            webview.setAttribute('src', `${url.format({
-              protocol: 'lulumi-extension',
-              slashes: true,
-              hostname: extension.extensionId,
-              pathname: extension.browser_action.default_popup,
-            })}`);
-            return;
-          }
-          if (extension.webContentsId) {
-            (this as any).$electron.remote.webContents.fromId(extension.webContentsId)
-              .send('lulumi-browser-action-clicked', { id: this.tab.id });
           }
         }
       }
     }
     removeLulumiExtension(extensionId: string): void {
-      const ipc: Electron.IpcRenderer = (this as any).$electron.ipcRenderer;
+      const ipc = this.$electron.ipcRenderer;
       ipc.send('remove-lulumi-extension', extensionId);
     }
     onContextmenu(extension: any): void {
-      const currentWindow: Electron.BrowserWindow
-        = (this as any).$electron.remote.BrowserWindow.fromId(this.windowId);
-      const { Menu, MenuItem } = (this as any).$electron.remote;
-      const menu = new Menu();
+      const currentWindow: Electron.BrowserWindow | null
+        = this.$electron.remote.BrowserWindow.fromId(this.windowId);
+      if (currentWindow) {
+        const { Menu, MenuItem } = this.$electron.remote;
+        const menu = new Menu();
 
-      menu.append(new MenuItem({
-        label: 'Remove extension',
-        click: () => {
-          this.removeLulumiExtension(extension.extensionId);
-        },
-      }));
+        menu.append(new MenuItem({
+          label: 'Remove extension',
+          click: () => {
+            this.removeLulumiExtension(extension.extensionId);
+          },
+        }));
 
-      menu.popup(currentWindow, { async: true });
+        menu.popup(currentWindow, { async: true });
+      }
     }
 
     mounted() {
@@ -765,7 +769,7 @@
         };
       }
 
-      const ipc: Electron.IpcRenderer = (this as any).$electron.ipcRenderer;
+      const ipc = this.$electron.ipcRenderer;
 
       ipc.on('lulumi-commands-execute-page-action', (event: Electron.IpcMessageEvent, extensionId: string) => {
         const extension = this.$refs[`popover-${extensionId}`][0].referenceElm;

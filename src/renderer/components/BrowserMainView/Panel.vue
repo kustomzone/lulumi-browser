@@ -32,7 +32,7 @@
             webview.style.width = `${size.width}px`;
             webview.style.overflow = 'hidden';
           } else if (event.channel === 'ready') {
-            (this as any).$electron.ipcRenderer
+            this.$electron.ipcRenderer
               .send(`${extension.extensionId}-panel-id`, webview.getWebContents().id);
           }
         });
