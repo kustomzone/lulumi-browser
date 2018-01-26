@@ -111,7 +111,7 @@
             match.indices.forEach((indexPair, index) => {
               const prefix: string = tmpStr.substring(prefixIndex, indexPair[0]);
               const target: string = tmpStr.substring(indexPair[0], indexPair[1] + 1);
-              
+
               renderElements.push(prefix);
               renderElements.push(h('span', { style: { color: '#499fff' } }, target));
               prefixIndex = indexPair[1] + 1;
@@ -202,7 +202,7 @@
     onpageActionClickedEvent: Event = new Event();
     badgeTextArray: Lulumi.Navbar.BadgeTextArray = {};
     badgeBackgroundColorArray: Lulumi.Navbar.BadgeBackgroundColorArray = {};
-    
+
     windowId: number;
 
     get dummyTabObject(): Lulumi.Store.TabObject {
@@ -639,15 +639,17 @@
         const isPageAction = extension.page_action;
         const isBrowserAction = extension.browser_action;
         if (isPageAction || isBrowserAction) {
-          const webview = this.$refs[`webview-${extension.extensionId}`][0];
-          webview.addEventListener('context-menu', (event) => {
+          const webview: Electron.WebviewTag = this.$refs[`webview-${extension.extensionId}`][0];
+          webview.addEventListener('context-menu', (event: any) => {
             const { Menu, MenuItem } = this.$electron.remote;
             const menu = new Menu();
+
+            const params: Electron.ContextMenuParams = (event as any).params;
 
             menu.append(new MenuItem({
               label: 'Inspect Element',
               click: () => {
-                webview.inspectElement(event.params.x, event.params.y);
+                webview.inspectElement(params.x, params.y);
               },
             }));
 
@@ -681,12 +683,12 @@
               ? (target.previousElementSibling! as HTMLImageElement)
               : (target as HTMLImageElement);
             if (img.classList.contains('enabled')) {
-              if (extension.page_action.default_popup) {
+              if (isPageAction.default_popup) {
                 webview.setAttribute('src', `${url.format({
                   protocol: 'lulumi-extension',
                   slashes: true,
                   hostname: extension.extensionId,
-                  pathname: extension.page_action.default_popup,
+                  pathname: isPageAction.default_popup,
                 })}`);
                 return;
               }
@@ -696,12 +698,12 @@
               }
             }
           } else if (isBrowserAction) {
-            if (extension.browser_action.default_popup) {
+            if (isBrowserAction.default_popup) {
               webview.setAttribute('src', `${url.format({
                 protocol: 'lulumi-extension',
                 slashes: true,
                 hostname: extension.extensionId,
-                pathname: extension.browser_action.default_popup,
+                pathname: isBrowserAction.default_popup,
               })}`);
               return;
             }
@@ -725,9 +727,25 @@
         const menu = new Menu();
 
         menu.append(new MenuItem({
+          label: extension.name,
+          enabled: false,
+        }));
+
+        menu.append(new MenuItem({ type: 'separator' }));
+
+        menu.append(new MenuItem({
           label: 'Remove extension',
           click: () => {
             this.removeLulumiExtension(extension.extensionId);
+          },
+        }));
+
+        menu.append(new MenuItem({ type: 'separator' }));
+
+        menu.append(new MenuItem({
+          label: 'Manage Extensions',
+          click: () => {
+            (this.$parent as BrowserMainView).onNewTab(this.windowId, 'about:extensions', true);
           },
         }));
 
