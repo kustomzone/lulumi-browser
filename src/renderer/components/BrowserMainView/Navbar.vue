@@ -647,7 +647,7 @@
             const params: Electron.ContextMenuParams = (event as any).params;
 
             menu.append(new MenuItem({
-              label: 'Inspect Element',
+              label: this.$t('navbar.extensions.contextMenu.inspectElement') as string,
               click: () => {
                 webview.inspectElement(params.x, params.y);
               },
@@ -734,7 +734,7 @@
         menu.append(new MenuItem({ type: 'separator' }));
 
         menu.append(new MenuItem({
-          label: 'Remove extension',
+          label: this.$t('navbar.extensions.contextMenu.remove') as string,
           click: () => {
             this.removeLulumiExtension(extension.extensionId);
           },
@@ -743,7 +743,7 @@
         menu.append(new MenuItem({ type: 'separator' }));
 
         menu.append(new MenuItem({
-          label: 'Manage Extensions',
+          label: this.$t('navbar.extensions.contextMenu.manage') as string,
           click: () => {
             (this.$parent as BrowserMainView).onNewTab(this.windowId, 'about:extensions', true);
           },
