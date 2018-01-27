@@ -13,9 +13,12 @@
   import * as url from 'url';
 
   @Component({
-    props: [
-      'windowId',
-    ],
+    props: {
+      windowId: {
+        type: Number,
+        required: true,
+      },
+    },
   })
   export default class Panel extends Vue {
     extensions: any[] = [];

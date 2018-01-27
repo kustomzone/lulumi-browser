@@ -176,9 +176,12 @@
         },
       },
     },
-    props: [
-      'windowId',
-    ],
+    props: {
+      windowId: {
+        type: Number,
+        required: true,
+      },
+    },
     components: {
       Panel,
       'awesome-icon': AwesomeIcon,
